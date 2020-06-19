@@ -8,6 +8,7 @@ import picocli.CommandLine;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 
 @CommandLine.Command(name = "item", description = "Get an item from database")
 public class ItemCommand implements Runnable {
@@ -23,9 +24,24 @@ public class ItemCommand implements Runnable {
             Connection connection = dataSource.getConnection();
             PreparedStatement ps = connection.prepareStatement("SELECT * FROM ITEM");
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                sb.append(rs.getString("sysdate")).append("\n");
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnsNumber = rsmd.getColumnCount();
+            for (int i = 1; i <= columnsNumber; i++) {
+                if (i > 1) sb.append(" ");
+                sb.append(rsmd.getColumnName(i));
             }
+            sb.append("\n");
+
+            while (rs.next()) {
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) sb.append(" ");
+                    sb.append(rs.getString(i));
+                }
+                sb.append("\n");
+            }
+            rs.close();
+            ps.close();
+            connection.close();
         } catch (Exception e){
             e.printStackTrace();
         }
